@@ -2,7 +2,6 @@ import User from "../models/User"
 import { Request, Response } from "express"
 import { checkPassword, hashPassword } from "../utils/auth"
 import slug from "slug"
-import { validationResult } from "express-validator"
 import { generateJWT } from "../utils/jwt"
 
 export const createAccount = async (req: Request, res: Response) => {
@@ -48,7 +47,36 @@ export const login = async (req: Request, res: Response) => {
         return res.status(401).json({ error: error.message })
     }
 
-    const token = generateJWT({id: user._id})
+    const token = generateJWT({ id: user._id })
 
     res.send(token)
+}
+
+
+export const getUser = async (req: Request, res: Response) => {
+    res.json(req.user)
+}
+
+export const updateProfile = async (req: Request, res: Response) => {
+    try {
+        const { description } = req.body
+
+        const handle = slug(req.body.handle, '')
+        const handleExist = await User.findOne({ handle })
+        if (handleExist && handleExist.email !== req.user.email) {
+            const error = new Error('Nombre de ususario no disponible')
+            return res.status(409).json({ error: error.message })
+        }
+
+        //actualizar el usuario
+        req.user.description = description
+        req.user.handle = handle
+
+        await req.user.save()
+        res.send('Perfil Actualizado Correctamente')
+
+    } catch (e) {
+        const error = new Error('Hubo un errros')
+        return res.status(500).json({ error: error.message })
+    }
 }
