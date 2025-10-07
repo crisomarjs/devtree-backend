@@ -5,6 +5,7 @@ import { connectDb } from './config/db';
 import cors from 'cors';
 import { corsConfig } from './config/cors';
 
+
 connectDb()
 
 const app = express()
